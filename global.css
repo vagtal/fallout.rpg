@@ -1,0 +1,265 @@
+/* GOOGLE FONTS */
+@import url('https://fonts.googleapis.com/css2?family=Open+Sans:ital,wght@0,300..800;1,300..800&family=Roboto+Mono:ital,wght@0,100..700;1,100..700&display=swap');
+@import url('https://golden-layout.com/files/latest/css/goldenlayout-base.css');
+@import url('https://golden-layout.com/files/latest/css/goldenlayout-dark-theme.css');
+
+/* Variables */
+:root {
+    --light-purple: lavender;
+    --selected: yellowgreen;
+}
+
+/* Generic */
+html, body {
+    height: 100%;
+    width: 100%;
+    max-width: 100%;
+    overflow: hidden;
+    background-color: black !important;
+}
+
+html {
+    @apply text-slate-900;
+    font-family: "Open Sans", sans-serif;
+    overflow: hidden;
+}
+
+#modal {
+    position: fixed;
+    display: none;
+    grid-template-rows: 100vh;
+    grid-template-columns: 100vw;
+    background-color: black;
+    width: 100%;
+    height: 100%;
+    z-index: 1000000;
+    opacity: 0.9;
+}
+
+#paint {
+    color: blue;
+}
+
+#addList {
+    color: green;
+}
+
+#modal > div {
+    justify-self: center;
+    align-self: center;
+    width: 50%;
+}
+
+#modal .buttons {
+    margin-top: 10px;
+    text-align: center;
+}
+
+#modal .buttons button {
+    font-size: 1.5rem;
+}
+
+#modal > div input {
+    display: block;
+    width: 100%;
+    height: 40px;
+    font-size: 1rem;
+}
+
+.white {
+    color: white;
+}
+
+.red {
+    color: red;
+}
+
+body {
+    display: flex;
+    flex-direction: column;
+    margin: 0;
+}
+
+input {
+    color: black;
+    background-color: var(--light-purple) !important;
+}
+
+main {
+    flex: 1;
+    height: 100%;
+}
+
+h1 {
+    @apply text-5xl tracking-tight font-black text-purple-900; 
+}
+
+p, a {
+    @apply text-lg;
+}
+
+li {
+    @apply font-semibold;
+}
+
+a {
+    @apply text-sky-500 font-medium hover:underline underline-offset-4 break-words;
+}
+
+[x-cloak] {
+    display: none !important;
+}
+
+.btn  {
+    color: white;
+}
+
+/* Cambiar altura del tab */
+.lm_tab {
+    height: 30px !important; /* Ajusta el tamaño según lo necesario */
+    font-size: 16px; /* Ajusta el tamaño del texto */
+    padding: 10px; /* Ajusta el padding interno */
+    line-height: 30px;
+}
+
+/* Ajustar la barra de tabs */
+.lm_header {
+    height: 35px !important; /* Ajusta el tamaño de la barra de tabs */
+}
+
+#golden-layout {
+	width: 100%;
+	height: 100%;
+}
+
+.floating, .floating-state {
+	z-index: 111111;
+	position: absolute;
+	summary {
+        width: 30px;
+        height: 30px;
+        position: absolute;
+        text-align: right;
+        cursor: pointer;
+        line-height: 28px;
+    }
+    ul {
+        list-style: none;
+        margin: 0;
+    }
+    li {
+        padding: 5px 0;
+        cursor: pointer;   
+        font-size: 1.3rem;     
+        color: dimgray;
+    }
+    li:hover {
+        color: black;
+    }
+}
+
+.floating {
+	right: 0;
+	summary {
+        right: 8px;
+        top: 3px;
+        padding-right: 3px;
+	}
+    .dropdown-content {
+        position: relative;
+        top: 34px;
+        right: 5px;
+        background-color: white;
+        padding: 15px;
+        margin: 0;
+        border-radius: 4px;
+        display: flex;
+    }
+    ul {
+        padding: 0;
+    }
+    ul.first-list {
+        margin-right: 15px;
+    }
+}
+
+#saveState {
+    text-align: center;
+    border-bottom: 1px solid black;
+}
+
+.stateSaved {
+    height: 30px;
+}
+
+.floating-state {
+    left: 45px;
+    bottom: 40px;
+	summary {
+        left: -40px;
+        bottom: -32px;
+        background-color: black;
+        padding-right: 5px;
+        border-radius: 5px;
+        padding-top: 3px;
+	}
+    ul {
+        position: relative;
+        top: 31px;
+        right: 5px;
+        background-color: white;
+        padding: 15px;
+        border-radius: 4px;
+    }
+    li b:hover {
+        color: red;
+    }
+}
+
+#maximize-bar {
+    height: 36px;
+    width: 100%;
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    background-color: black;
+    z-index: 2;
+    display: none;
+    color: white;
+    line-height: 36px;
+    padding-left: 20px;
+}
+
+#maximize-bar span {
+    cursor: default;
+    flex: 1;
+}
+
+#maximize-bar i {
+    cursor: pointer;
+    width: 100px;
+}
+
+.lm_controls {
+    height: 100%;
+    align-items: center;
+}
+
+.lm_header .lm_controls > * {
+    background-size: 15px;
+    height: 30px !important;
+    width: 30px !important;
+}
+
+.lm_close {
+    visibility: hidden;
+}
+
+.lm_header .lm_tab.lm_active.lm_focused {
+    background-color: #302e2e !important;
+}
+
+.lm_dragProxy {
+  display: none !important;
+}
