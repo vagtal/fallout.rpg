@@ -12,6 +12,7 @@
             --tab-bg: #1a1a1a;
             --tab-active: #302e2e;
             --border: #222;
+            --drag-accent: #a3ff6a;
         }
 
         body, html {
@@ -62,7 +63,7 @@
             height: 35px;
             display: flex;
             align-items: center;
-            justify-content: space-between; /* Asegura separación entre pestañas y botones */
+            justify-content: space-between;
             padding: 4px 6px;
             background: #0b0b0b;
             border-bottom: 1px solid var(--border);
@@ -76,27 +77,49 @@
             gap: 6px;
             overflow-x: auto; 
             scrollbar-width: none; 
-            cursor: grab;
             min-width: 0;
+            padding-right: 20px;
+            height: 100%;
         }
         .tabs-rail::-webkit-scrollbar { display: none; }
 
         .tab {
             flex: 0 0 auto; position: relative; padding: 6px 28px 6px 12px;
             background: var(--tab-bg); color: #ddd; border-radius: 999px;
-            font-size: 13px; cursor: pointer; border: 0; user-select: none;
+            font-size: 13px; cursor: grab; border: 1px solid transparent; user-select: none;
             white-space: nowrap;
+            transition: all 0.2s ease;
         }
+        .tab:active { cursor: grabbing; }
         .tab.active { background: var(--tab-active); color: #fff; }
         .tab.dyn::after { content: " •"; color: var(--primary-color); }
         .tab .close { position: absolute; right: 8px; top: 50%; transform: translateY(-50%); font-size: 10px; opacity: 0.6; }
         .tab .close:hover { opacity: 1; color: #ff6a6a; }
 
+        /* INDICADORES DE DRAG & DROP */
+        .tab.dragging {
+            opacity: 0.4;
+            border: 1px dashed var(--drag-accent);
+            transform: scale(0.95);
+        }
+
+        .tab.drag-over {
+            background: #2a3a20 !important;
+            border-color: var(--drag-accent);
+            transform: translateY(-2px);
+            box-shadow: 0 4px 8px rgba(0,0,0,0.3);
+        }
+
+        .tabs-rail.drag-target {
+            background: rgba(163, 255, 106, 0.05);
+            border-radius: 4px;
+        }
+
         .actions { 
             display: flex; 
             gap: 4px; 
             align-items: center; 
-            margin-left: auto; /* Empuja todo el bloque de acciones a la derecha */
+            margin-left: auto;
             padding-left: 8px;
             flex-shrink: 0;
         }
@@ -120,15 +143,12 @@
         }
         .dropdown-content button:hover { background: #333; }
         
-        /* Indicador de Layout Activo */
         .dropdown-content button.active-layout {
             color: var(--primary-color);
             background: #252525;
             font-weight: bold;
         }
-        .dropdown-content button.active-layout::before {
-            content: "✓ ";
-        }
+        .dropdown-content button.active-layout::before { content: "✓ "; }
 
         .pdfWrap { height: 100%; display: flex; flex-direction: column; }
         .pdfTop { padding: 6px; background: #0b0b0b; border-bottom: 1px solid var(--border); display: flex; gap: 8px; align-items: center; font-size: 11px; }
@@ -148,7 +168,7 @@
 <div class="root layout-double" id="main-grid">
     <section class="stack" id="col-0">
         <header class="tabs">
-            <div class="tabs-rail" id="rail-0" ondragover="allowDrop(event)" ondrop="handleDropRail(event, 0)"></div>
+            <div class="tabs-rail" id="rail-0" ondragover="allowDrop(event)" ondragenter="handleDragEnterRail(0)" ondragleave="handleDragLeaveRail(0)" ondrop="handleDropRail(event, 0)"></div>
             <div class="actions">
                 <button class="iconbtn" onclick="toggleFS(0)">⛶</button>
                 <button class="iconbtn" onclick="openModal(0)">+ URL</button>
@@ -160,7 +180,7 @@
 
     <section class="stack" id="col-1">
         <header class="tabs">
-            <div class="tabs-rail" id="rail-1" ondragover="allowDrop(event)" ondrop="handleDropRail(event, 1)"></div>
+            <div class="tabs-rail" id="rail-1" ondragover="allowDrop(event)" ondragenter="handleDragEnterRail(1)" ondragleave="handleDragLeaveRail(1)" ondrop="handleDropRail(event, 1)"></div>
             <div class="actions">
                 <button class="iconbtn" onclick="toggleFS(1)">⛶</button>
                 <button class="iconbtn" onclick="openModal(1)">+ URL</button>
@@ -179,7 +199,7 @@
 
     <section class="stack" id="col-2" style="display: none;">
         <header class="tabs">
-            <div class="tabs-rail" id="rail-2" ondragover="allowDrop(event)" ondrop="handleDropRail(event, 2)"></div>
+            <div class="tabs-rail" id="rail-2" ondragover="allowDrop(event)" ondragenter="handleDragEnterRail(2)" ondragleave="handleDragLeaveRail(2)" ondrop="handleDropRail(event, 2)"></div>
             <div class="actions">
                 <button class="iconbtn" onclick="toggleFS(2)">⛶</button>
                 <button class="iconbtn" onclick="openModal(2)">+ URL</button>
@@ -202,7 +222,7 @@
 </div>
 
 <script>
-const BASE_URLS = {
+    const BASE_URLS = {
         Tracker: 'https://vagtal.github.io/notion-init-tracker-plugin.github.io/',
         RollForFantasy: 'https://rollforfantasy.com/',
         RabdRoll: 'https://www.randroll.com/30-days-gen-sites/',
@@ -295,11 +315,35 @@ const BASE_URLS = {
                 btn.className = `tab ${isActive ? 'active' : ''} ${tab.isDynamic ? 'dyn' : ''}`;
                 btn.draggable = true;
                 btn.innerHTML = `${tab.title} <span class="close" onclick="closeTab(event, '${tab.key}', ${colIdx})">✕</span>`;
+                
+                // EVENTOS DE CLICK
                 btn.onclick = () => { activeKeys[colIdx] = tab.key; syncDOM(); };
-                btn.ondragstart = (e) => { e.dataTransfer.setData('text', tab.key); };
-                btn.ondragover = (e) => { e.preventDefault(); btn.classList.add('drag-over'); };
+
+                // EVENTOS DE DRAG & DROP (CON FEEDBACK VISUAL)
+                btn.ondragstart = (e) => { 
+                    e.dataTransfer.setData('text', tab.key); 
+                    setTimeout(() => btn.classList.add('dragging'), 0);
+                };
+                
+                btn.ondragend = () => {
+                    btn.classList.remove('dragging');
+                    document.querySelectorAll('.tabs-rail').forEach(r => r.classList.remove('drag-target'));
+                };
+
+                btn.ondragover = (e) => { 
+                    e.preventDefault(); 
+                    if (!btn.classList.contains('dragging')) {
+                        btn.classList.add('drag-over'); 
+                    }
+                };
+
                 btn.ondragleave = () => btn.classList.remove('drag-over');
-                btn.ondrop = (e) => handleDropTab(e, tab.key, colIdx);
+
+                btn.ondrop = (e) => {
+                    btn.classList.remove('drag-over');
+                    handleDropTab(e, tab.key, colIdx);
+                };
+
                 rail.appendChild(btn);
             });
 
@@ -330,21 +374,27 @@ const BASE_URLS = {
 
     function closeTab(e, key, colIdx) {
         e.stopPropagation();
-        
-        // Contar cuántas pestañas hay en este panel específico
         const tabsInPanel = tabs.filter(t => t.column === colIdx).length;
-        
         if (tabsInPanel <= 1) {
             alert("No puedes dejar un panel vacío. Mueve otra pestaña aquí o añade una nueva antes de cerrar esta.");
             return;
         }
-
         tabs = tabs.filter(t => t.key !== key);
         syncDOM();
     }
 
+    // FEEDBACK VISUAL PARA EL RAIL
+    function handleDragEnterRail(colIdx) {
+        document.getElementById(`rail-${colIdx}`).classList.add('drag-target');
+    }
+
+    function handleDragLeaveRail(colIdx) {
+        document.getElementById(`rail-${colIdx}`).classList.remove('drag-target');
+    }
+
     function handleDropRail(e, colIdx) {
         e.preventDefault();
+        handleDragLeaveRail(colIdx);
         const srcKey = e.dataTransfer.getData('text');
         const tab = tabs.find(t => t.key === srcKey);
         if (tab) { tab.column = colIdx; activeKeys[colIdx] = srcKey; syncDOM(); }
