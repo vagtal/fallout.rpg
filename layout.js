@@ -111,12 +111,14 @@ const Tracker = createClass('https://vagtal.github.io/notion-init-tracker-plugin
 const RollForFantasy = createClass('https://rollforfantasy.com/')
 const RabdRoll = createClass('https://www.randroll.com/30-days-gen-sites/')
 const Drive = createClass('http://127.0.0.1:9090/')
+const Player = createClass('https://vagtal.github.io/player')
 const Sound = createClass('https://app.syrinscape.com/#/?soundset=3&element=1565315')
 
 export const goldenLayout = new GoldenLayout(document.getElementById('golden-layout'))
 
 goldenLayout.registerComponentConstructor('Tracker', Tracker)
 goldenLayout.registerComponentConstructor('Drive', Drive)
+goldenLayout.registerComponentConstructor('Player', Player)
 goldenLayout.registerComponentConstructor('RollForFantasy', RollForFantasy)
 goldenLayout.registerComponentConstructor('RabdRoll', RabdRoll)
 goldenLayout.registerComponentConstructor('Sound', Sound)

@@ -7,7 +7,13 @@ export const defaultConfig = {
     content: [
       {
         type: 'stack',
-        content: [          
+        content: [    
+          {
+            title: 'Player',
+            type: 'component',
+            componentType: 'Player',
+            componentState: { text: 'Player C' }
+          },      
           {
             title: 'PDF',
             type: 'component',
