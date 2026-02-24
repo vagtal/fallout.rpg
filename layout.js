@@ -47,13 +47,13 @@ function createClass(url) {
                 this.iframe.style.display = 'none'
             })
 
-            container.on('destroy', () => {
+            /*container.on('destroy', () => {
                 const name = this.container._componentType
                 if (name.includes('dynamicClass') && !isReloading) {
                     dynamicClasses = dynamicClasses.filter(clss => clss.name !== name)
                     localStorage.setItem('classes', JSON.stringify(dynamicClasses))
                 }
-            })
+            })*/
 
             this.resizeWithContainerAutomatically = true
         }
