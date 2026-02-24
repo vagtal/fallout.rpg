@@ -1,0 +1,95 @@
+
+<!DOCTYPE html>
+<html lang="es">
+	<head>
+		<meta charset="UTF-8" />
+		<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
+		<!-- FAVICON -->
+		<link rel="icon" type="image/svg" href="/favicon.svg" />
+		<!-- THEME COLOR -->
+		<meta name="theme-color" content="#800080" />
+		<!-- GENERIC METADATA -->
+		<meta name="author" content="Vagtal" />
+		<!-- GOOGLE MATERIAL ICONS -->
+		<link href="https://fonts.googleapis.com/icon?family=Material+Icons" rel="stylesheet" />
+		<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/golden-layout@2.5.0/dist/css/goldenlayout-base.css">
+		<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/golden-layout@2.5.0/dist/css/themes/goldenlayout-dark-theme.css">
+		<!-- TITLE -->
+		<title>RPG Manager</title>
+		<script type="module" crossorigin src="/assets/index-_LSqIFV6.js"></script>
+		<link rel="stylesheet" crossorigin href="/assets/index-NBA-XTXc.css">
+	</head>
+	<body>
+		<div id="modal">
+			<div id="addUrl">
+				<spam class="white">Name</spam>
+				<input id="urlName"/>
+				<spam class="white">Url</spam>
+				<input id="url"/>
+				<div class="buttons">
+					<button id="saveUrl">Save</button>
+					<button id="cancelUrl">Cancel</button>
+				</div>
+			</div>
+		</div>
+		<div class="floating">
+			<details id="iconContent" class="dropdown dropdown-left dropdown-bottom">
+				<summary class="btn m-1">
+					<svg
+						xmlns="http://www.w3.org/2000/svg"
+						fill="none"
+						viewBox="0 0 24 24"
+						class="inline-block h-5 w-5 stroke-current">
+						<path
+						stroke-linecap="round"
+						stroke-linejoin="round"
+						stroke-width="2"
+						d="M5 12h.01M12 12h.01M19 12h.01M6 12a1 1 0 11-2 0 1 1 0 012 0zm7 0a1 1 0 11-2 0 1 1 0 012 0zm7 0a1 1 0 11-2 0 1 1 0 012 0z"></path>
+					</svg>
+				</summary>
+				<div class="menu dropdown-content bg-base-100 rounded-box z-[1] w-52 p-2 shadow">
+					<ul class="first-list">
+						<!-- <li><a class="component-list" id="Slayers">Slayers</a></li> -->
+						<li><a class="component-list" id="Drive">Drive</a></li>
+						<li><a class="component-list" id="PDF">PDF</a></li>
+						<li><a class="add-list" id="addList">Add url</a></li>
+					</ul>
+					<ul>
+						<li><a class="component-list" id="Tracker">Tracker</a></li>
+						<li><a class="component-list" id="Sound">Sound</a></li>
+						<li><a class="component-list" id="RollForFantasy">RollForFantasy</a></li>
+						<li><a class="component-list" id="RabdRoll">RabdRoll</a></li>
+						<li><a class="paint" id="paint">Paint</a></li>
+					<li><a class="red" id="resetLayout">Reset</a></li>
+					</ul>
+				</div>
+			</details>
+		</div>
+		
+		<div id="maximize-bar"><span></span><i id="minimize">🗕</i></div>
+
+		<div class="floating-state">
+			<details id="iconStatus"  class="dropdown dropdown-right dropdown-top">
+				<summary class="btn m-1">
+					<svg
+						xmlns="http://www.w3.org/2000/svg"
+						fill="none"
+						viewBox="0 0 24 24"
+						class="inline-block h-5 w-5 stroke-current">
+						<path
+						stroke-linecap="round"
+						stroke-linejoin="round"
+						stroke-width="2"
+						d="M5 12h.01M12 12h.01M19 12h.01M6 12a1 1 0 11-2 0 1 1 0 012 0zm7 0a1 1 0 11-2 0 1 1 0 012 0zm7 0a1 1 0 11-2 0 1 1 0 012 0z"></path>
+					</svg>
+				</summary>
+				<ul id="stateMenu" class="menu dropdown-content bg-base-100 rounded-box z-[1] w-52 p-2 shadow">
+					<li id="saveState"><a>Save state</a></li>
+				</ul>
+			</details>
+		</div>
+		<main class="bg-slate-100">
+			<div id="golden-layout"></div>
+		</main>
+	</body>
+</html>
