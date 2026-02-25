@@ -40,7 +40,25 @@
         .layout-triple-v #col-2 { grid-column: 2; grid-row: 2 / span 2; }
         .layout-triple-v #col-0 { grid-column: 1; grid-row: 1 / span 2 }
         .layout-triple-v #col-1 { grid-column: 2; grid-row: 1; }
+        /* Ajuste para el botón + */
+        .iconbtn {
+            min-width: 28px;
+            font-weight: bold;
+        }
 
+        /* Permitir scroll en el menú si la lista de BASE_URLS es muy larga */
+        .dropdown-content {
+            max-height: 400px;
+            overflow-y: auto;
+            scrollbar-width: thin;
+        }
+
+        /* Estilo para los botones del menú de añadir */
+        .dropdown-content button {
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+        }
         .stack {
             position: relative;
             background: var(--panel-bg);
@@ -170,7 +188,14 @@
             <div class="tabs-rail" id="rail-0" ondragover="allowDrop(event)" ondragenter="handleDragEnterRail(0)" ondragleave="handleDragLeaveRail(0)" ondrop="handleDropRail(event, 0)"></div>
             <div class="actions">
                 <button class="iconbtn" onclick="toggleFS(0)">⛶</button>
-                <button class="iconbtn" onclick="openModal(0)">+ URL</button>
+                <div class="dropdown">
+                    <button class="iconbtn" onclick="toggleAddMenu(event, 0)">+</button>
+                    <div class="dropdown-content" id="addMenu-0">
+                        <button onclick="openModal(0)">🌐 URL Personalizada</button>
+                        <button onclick="addPdfTab(0)">📄 Nuevo PDF Viewer</button>
+                        <hr style="border: 0; border-top: 1px solid #333; margin: 4px 0;">
+                        </div>
+                </div>
                 <button class="iconbtn" onclick="resetConfig()">Reset</button>
             </div>
         </header>
@@ -182,7 +207,14 @@
             <div class="tabs-rail" id="rail-1" ondragover="allowDrop(event)" ondragenter="handleDragEnterRail(1)" ondragleave="handleDragLeaveRail(1)" ondrop="handleDropRail(event, 1)"></div>
             <div class="actions">
                 <button class="iconbtn" onclick="toggleFS(1)">⛶</button>
-                <button class="iconbtn" onclick="openModal(1)">+ URL</button>
+                <div class="dropdown">
+                    <button class="iconbtn" onclick="toggleAddMenu(event, 1)">+</button>
+                    <div class="dropdown-content" id="addMenu-1">
+                        <button onclick="openModal(1)">🌐 URL Personalizada</button>
+                        <button onclick="addPdfTab(1)">📄 Nuevo PDF Viewer</button>
+                        <hr style="border: 0; border-top: 1px solid #333; margin: 4px 0;">
+                        </div>
+                </div>
                 <div class="dropdown">
                     <button class="iconbtn" id="layoutBtn" style="background:var(--primary-color);color:#000;font-weight:bold" onclick="toggleDropdown(event)">Layout ▾</button>
                     <div class="dropdown-content" id="layoutMenu">
@@ -201,7 +233,14 @@
             <div class="tabs-rail" id="rail-2" ondragover="allowDrop(event)" ondragenter="handleDragEnterRail(2)" ondragleave="handleDragLeaveRail(2)" ondrop="handleDropRail(event, 2)"></div>
             <div class="actions">
                 <button class="iconbtn" onclick="toggleFS(2)">⛶</button>
-                <button class="iconbtn" onclick="openModal(2)">+ URL</button>
+                <div class="dropdown">
+                    <button class="iconbtn" onclick="toggleAddMenu(event, 2)">+</button>
+                    <div class="dropdown-content" id="addMenu-2">
+                        <button onclick="openModal(2)">🌐 URL Personalizada</button>
+                        <button onclick="addPdfTab(2)">📄 Nuevo PDF Viewer</button>
+                        <hr style="border: 0; border-top: 1px solid #333; margin: 4px 0;">
+                    </div>
+                </div>
             </div>
         </header>
         <div class="panel" id="panel-2"></div>
@@ -227,17 +266,19 @@
         RabdRoll: 'https://www.randroll.com/30-days-gen-sites/',
         Drive: 'http://127.0.0.1:9090/',
         Player: 'https://vagtal.github.io/player',
+        Notes: 'https://vagtal.github.io/notes',
         Sound: 'https://app.syrinscape.com/#/?soundset=3&element=1565315'
     };
 
     const DEFAULT_TABS = [
         { key: 't1', title: 'Player', type: 'URL', column: 0, url: BASE_URLS.Player },
         { key: 't2', title: 'PDF Viewer', type: 'PDF', column: 0, url: 'about:blank' },
-        { key: 't3', title: 'Drive', type: 'URL', column: 0, url: BASE_URLS.Drive },
-        { key: 't4', title: 'Tracker', type: 'URL', column: 1, url: BASE_URLS.Tracker },
-        { key: 't5', title: 'RollForFantasy', type: 'URL', column: 1, url: BASE_URLS.RollForFantasy },
-        { key: 't6', title: 'RabdRoll', type: 'URL', column: 1, url: BASE_URLS.RabdRoll },
-        { key: 't7', title: 'Sound', type: 'URL', column: 1, url: BASE_URLS.Sound }
+        { key: 't3', title: 'Notes', type: 'URL', column: 0, url: BASE_URLS.Notes },
+        { key: 't4', title: 'Drive', type: 'URL', column: 0, url: BASE_URLS.Drive },
+        { key: 't5', title: 'Tracker', type: 'URL', column: 1, url: BASE_URLS.Tracker },
+        { key: 't6', title: 'RollForFantasy', type: 'URL', column: 1, url: BASE_URLS.RollForFantasy },
+        { key: 't7', title: 'RabdRoll', type: 'URL', column: 1, url: BASE_URLS.RabdRoll },
+        { key: 't8', title: 'Sound', type: 'URL', column: 1, url: BASE_URLS.Sound }
     ];
 
     let tabs = JSON.parse(localStorage.getItem('rpg_tabs')) || DEFAULT_TABS;
@@ -258,7 +299,9 @@
     }
 
     window.onclick = function() {
-        document.getElementById('layoutMenu').classList.remove('show');
+        document.querySelectorAll('.dropdown-content').forEach(menu => {
+            menu.classList.remove('show');
+        });
     }
 
     function changeLayout(mode) {
@@ -287,7 +330,73 @@
         syncDOM();
     }
 
-    function syncDOM() {
+    function toggleAddMenu(e, colIdx) {
+        e.stopPropagation();
+        
+        // 1. Cerrar todos los demás menús antes de abrir este
+        document.querySelectorAll('.dropdown-content').forEach(el => {
+            if (el.id !== `addMenu-${colIdx}`) el.classList.remove('show');
+        });
+        
+        const menu = document.getElementById(`addMenu-${colIdx}`);
+        
+        // 2. Limpiar y Regenerar contenido para asegurar que el colIdx es correcto
+        // Mantenemos las dos opciones fijas primero
+        menu.innerHTML = `
+            <button onclick="openModal(${colIdx})">🌐 URL Personalizada</button>
+            <button onclick="addPdfTab(${colIdx})">📄 Nuevo PDF Viewer</button>
+            <hr style="border: 0; border-top: 1px solid #333; margin: 4px 0;">
+        `;
+        
+        // 3. Cargar dinámicamente la lista de BASE_URLS
+        for (const [name, url] of Object.entries(BASE_URLS)) {
+            const btn = document.createElement('button');
+            btn.textContent = `📍 ${name}`;
+            btn.onclick = () => addPredefinedTab(name, url, colIdx);
+            menu.appendChild(btn);
+        }
+        
+        menu.classList.toggle('show');
+    }
+
+    // Función para añadir una pestaña de la lista predefinida
+    function addPredefinedTab(name, url, colIdx) {
+        const key = 'pre_' + Date.now() + Math.random().toString(36).substr(2, 5);
+        tabs.push({ 
+            key, 
+            title: name, 
+            url, 
+            column: colIdx, 
+            isDynamic: true, 
+            type: 'URL' 
+        });
+        activeKeys[colIdx] = key;
+        syncDOM();
+        // El menú se cerrará por el window.onclick global que ya tienes
+    }
+
+    function addPdfTab(colIdx) {
+        // Generamos una clave única basada en el tiempo
+        const key = 'pdf_' + Date.now();
+        
+        // Insertamos el objeto en el array de pestañas
+        tabs.push({ 
+            key: key, 
+            title: 'PDF Viewer', 
+            url: 'about:blank', // Se inicia vacío hasta que el usuario sube el archivo
+            column: colIdx, 
+            type: 'PDF', 
+            isDynamic: true 
+        });
+        
+        // Hacemos que la nueva pestaña sea la activa en esa columna
+        activeKeys[colIdx] = key;
+        
+        // Refrescamos el DOM para que aparezca
+        syncDOM();
+    }
+
+   function syncDOM() {
         const grid = document.getElementById('main-grid');
         grid.className = `root layout-${currentLayout}`;
         const colLimit = currentLayout === 'double' ? 2 : 3;
@@ -315,16 +424,15 @@
                 btn.draggable = true;
                 btn.innerHTML = `${tab.title} <span class="close" onclick="closeTab(event, '${tab.key}', ${colIdx})">✕</span>`;
                 
-				// --- AÑADE ESTO AQUÍ ---
-				btn.addEventListener("contextmenu", (e) => {
-					e.preventDefault(); 
-				}, false);
-				// -----------------------
-				
+                // --- BLOQUEO MENÚ CONTEXTUAL ---
+                btn.addEventListener("contextmenu", (e) => {
+                    e.preventDefault(); 
+                }, false);
+                
                 // EVENTOS DE CLICK
                 btn.onclick = () => { activeKeys[colIdx] = tab.key; syncDOM(); };
 
-                // EVENTOS DE DRAG & DROP (CON FEEDBACK VISUAL)
+                // EVENTOS DE DRAG & DROP
                 btn.ondragstart = (e) => { 
                     e.dataTransfer.setData('text', tab.key); 
                     setTimeout(() => btn.classList.add('dragging'), 0);
@@ -352,18 +460,35 @@
                 rail.appendChild(btn);
             });
 
+            // LIMPIEZA DE PANALES ANTIGUOS
             const targetKeys = colTabs.map(t => t.key);
-            panel.querySelectorAll('.tab-pane').forEach(p => { if (!targetKeys.includes(p.dataset.key)) p.remove(); });
+            panel.querySelectorAll('.tab-pane').forEach(p => { 
+                if (!targetKeys.includes(p.dataset.key)) p.remove(); 
+            });
 
+            // RENDERIZADO DE CONTENIDO (URL vs PDF)
             colTabs.forEach(tab => {
                 let pane = panel.querySelector(`.tab-pane[data-key="${tab.key}"]`);
                 if (!pane) {
                     pane = document.createElement('div');
                     pane.className = 'tab-pane';
                     pane.dataset.key = tab.key;
-                    pane.innerHTML = tab.type === 'PDF' 
-                        ? `<div class="pdfWrap"><div class="pdfTop"><span>PDF:</span><input type="file" accept="application/pdf" onchange="loadPdf(event, '${tab.key}')"></div><iframe id="pdf-${tab.key}" src="${tab.blobUrl || 'about:blank'}"></iframe></div>`
-                        : `<iframe src="${tab.url}"></iframe>`;
+                    
+                    // --- CAMBIO AQUÍ: SOPORTE PDF ---
+                    if (tab.type === 'PDF') {
+                        pane.innerHTML = `
+                            <div class="pdfWrap">
+                                <div class="pdfTop">
+                                    <span>PDF:</span>
+                                    <input type="file" accept="application/pdf" onchange="loadPdf(event, '${tab.key}')">
+                                </div>
+                                <iframe id="pdf-${tab.key}" src="${tab.blobUrl || 'about:blank'}"></iframe>
+                            </div>`;
+                    } else {
+                        pane.innerHTML = `<iframe src="${tab.url}"></iframe>`;
+                    }
+                    // --------------------------------
+                    
                     panel.appendChild(pane);
                 }
                 pane.classList.toggle('active', activeKeys[colIdx] === tab.key);
@@ -421,6 +546,7 @@
     function allowDrop(e) { e.preventDefault(); }
 
     function loadPdf(e, key) {
+        console.log(e.target)
         const file = e.target.files[0];
         if (file) {
             const url = URL.createObjectURL(file);
@@ -429,6 +555,7 @@
                 tab.blobUrl = url;
                 const iframe = document.getElementById(`pdf-${key}`);
                 if (iframe) iframe.src = url;
+                e.target.parentElement.style.display = 'none';
                 save();
             }
         }
