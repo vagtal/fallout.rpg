@@ -316,6 +316,12 @@
                 btn.draggable = true;
                 btn.innerHTML = `${tab.title} <span class="close" onclick="closeTab(event, '${tab.key}', ${colIdx})">✕</span>`;
                 
+				// --- AÑADE ESTO AQUÍ ---
+				btn.addEventListener("contextmenu", (e) => {
+					e.preventDefault(); 
+				}, false);
+				// -----------------------
+				
                 // EVENTOS DE CLICK
                 btn.onclick = () => { activeKeys[colIdx] = tab.key; syncDOM(); };
 
