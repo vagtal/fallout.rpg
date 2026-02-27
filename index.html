@@ -34,6 +34,8 @@
 
         /* Layouts */
         .layout-double { grid-template-columns: 1fr 1fr; grid-template-rows: 1fr; }
+		.layout-double-h #col-0 { grid-row: 2; }
+		.layout-double-h #col-1 { grid-row: 1; }
         .layout-triple-h { grid-template-columns: 1fr 1fr; grid-template-rows: 1fr 1fr; }
         .layout-triple-h #col-2 { grid-column: 1 / span 2; }
         .layout-triple-v { grid-template-columns: 1fr 1fr; grid-template-rows: 1fr 1fr; }
@@ -220,6 +222,7 @@
                     <button class="iconbtn" id="layoutBtn" style="background:var(--primary-color);color:#000;font-weight:bold" onclick="toggleDropdown(event)">Layout ▾</button>
                     <div class="dropdown-content" id="layoutMenu">
                         <button id="opt-double" onclick="changeLayout('double')">Doble Vertical</button>
+						<button id="opt-double-h" onclick="changeLayout('double-h')">Doble Horizontal</button>
                         <button id="opt-triple-h" onclick="changeLayout('triple-h')">Triple Horizontal</button>
                         <button id="opt-triple-v" onclick="changeLayout('triple-v')">Triple Vertical</button>
                     </div>
@@ -293,7 +296,7 @@
     }
 
     function updateLayoutMenuUI() {
-        ['double', 'triple-h', 'triple-v'].forEach(opt => {
+        ['double', 'double-h', 'triple-h', 'triple-v'].forEach(opt => {
             const btn = document.getElementById(`opt-${opt}`);
             if (btn) btn.classList.toggle('active-layout', currentLayout === opt);
         });
@@ -322,7 +325,7 @@
                     activeKeys[2] = tabToMove.key;
                 }
             }
-        } else if (mode === 'double') {
+        } else {
             tabs.forEach(t => { if(t.column === 2) t.column = 1; });
         }
 
@@ -400,7 +403,7 @@
    function syncDOM() {
         const grid = document.getElementById('main-grid');
         grid.className = `root layout-${currentLayout}`;
-        const colLimit = currentLayout === 'double' ? 2 : 3;
+        const colLimit = currentLayout.startsWith('triple') ? 3 : 2;
 
         [0, 1, 2].forEach(colIdx => {
             const rail = document.getElementById(`rail-${colIdx}`);
