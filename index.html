@@ -22,6 +22,9 @@
             overflow: hidden;
             font-family: system-ui, -apple-system, sans-serif;
             color: #ddd;
+            /* Evita selección de texto al arrastrar en touch */
+            -webkit-user-select: none;
+            user-select: none;
         }
 
         .root {
@@ -32,35 +35,30 @@
             transition: all 0.3s ease;
         }
 
-        /* Layouts */
         .layout-double { grid-template-columns: 1fr 1fr; grid-template-rows: 1fr; }
-		.layout-double-h #col-0 { grid-row: 2; }
-		.layout-double-h #col-1 { grid-row: 1; }
+        .layout-double-h #col-0 { grid-row: 2; }
+        .layout-double-h #col-1 { grid-row: 1; }
         .layout-triple-h { grid-template-columns: 1fr 1fr; grid-template-rows: 1fr 1fr; }
         .layout-triple-h #col-2 { grid-column: 1 / span 2; }
         .layout-triple-v { grid-template-columns: 1fr 1fr; grid-template-rows: 1fr 1fr; }
         .layout-triple-v #col-2 { grid-column: 2; grid-row: 2 / span 2; }
         .layout-triple-v #col-0 { grid-column: 1; grid-row: 1 / span 2 }
         .layout-triple-v #col-1 { grid-column: 2; grid-row: 1; }
-        /* Ajuste para el botón + */
-        .iconbtn {
-            min-width: 28px;
-            font-weight: bold;
-        }
 
-        /* Permitir scroll en el menú si la lista de BASE_URLS es muy larga */
+        .iconbtn { min-width: 28px; font-weight: bold; }
+
         .dropdown-content {
             max-height: 400px;
             overflow-y: auto;
             scrollbar-width: thin;
         }
 
-        /* Estilo para los botones del menú de añadir */
         .dropdown-content button {
             white-space: nowrap;
             overflow: hidden;
             text-overflow: ellipsis;
         }
+
         .stack {
             position: relative;
             background: var(--panel-bg);
@@ -90,25 +88,26 @@
         }
 
         .tabs-rail {
-            flex: 1; 
-            display: flex; 
-            align-items: center; 
+            flex: 1;
+            display: flex;
+            align-items: center;
             gap: 6px;
-            overflow-x: auto; 
-            scrollbar-width: none; 
+            overflow-x: auto;
+            scrollbar-width: none;
             min-width: 0;
             padding-right: 20px;
             height: 100;
-			overflow-y: hidden;
+            overflow-y: hidden;
         }
         .tabs-rail::-webkit-scrollbar { display: none; }
 
         .tab {
             flex: 0 0 auto; position: relative; padding: 6px 28px 6px 12px;
             background: var(--tab-bg); color: #ddd; border-radius: 999px;
-            font-size: 13px; cursor: grab; border: 1px solid transparent; user-select: none;
+            font-size: 13px; cursor: grab; border: 1px solid transparent;
             white-space: nowrap;
             transition: all 0.2s ease;
+            touch-action: none; /* CRÍTICO: evita scroll al arrastrar tab */
         }
         .tab:active { cursor: grabbing; }
         .tab.active { background: var(--tab-active); color: #fff; }
@@ -116,7 +115,6 @@
         .tab .close { position: absolute; right: 8px; top: 50%; transform: translateY(-50%); font-size: 10px; opacity: 0.6; }
         .tab .close:hover { opacity: 1; color: #ff6a6a; }
 
-        /* INDICADORES DE DRAG & DROP */
         .tab.dragging {
             opacity: 0.4;
             border: 1px dashed var(--drag-accent);
@@ -135,10 +133,40 @@
             border-radius: 4px;
         }
 
-        .actions { 
-            display: flex; 
-            gap: 4px; 
-            align-items: center; 
+        /* Ghost tab que sigue el dedo */
+        #touch-ghost {
+            position: fixed;
+            pointer-events: none;
+            z-index: 9999;
+            padding: 6px 28px 6px 12px;
+            background: var(--tab-active);
+            color: #fff;
+            border-radius: 999px;
+            font-size: 13px;
+            border: 1px solid var(--drag-accent);
+            box-shadow: 0 8px 24px rgba(0,0,0,0.6);
+            opacity: 0;
+            transform: scale(1.05);
+            transition: opacity 0.15s;
+            white-space: nowrap;
+            -webkit-user-select: none;
+            user-select: none;
+        }
+        #touch-ghost.visible { opacity: 0.9; }
+
+        /* Overlay transparente sobre iframes para no bloquear el touch durante drag */
+        .iframe-overlay {
+            display: none;
+            position: absolute;
+            inset: 0;
+            z-index: 100;
+        }
+        .dragging-active .iframe-overlay { display: block; }
+
+        .actions {
+            display: flex;
+            gap: 4px;
+            align-items: center;
             margin-left: auto;
             padding-left: 8px;
             flex-shrink: 0;
@@ -162,7 +190,7 @@
             color: white; text-align: left; cursor: pointer; font-size: 12px;
         }
         .dropdown-content button:hover { background: #333; }
-        
+
         .dropdown-content button.active-layout {
             color: var(--primary-color);
             background: #252525;
@@ -185,69 +213,66 @@
 </head>
 <body>
 
+<!-- Ghost element para drag táctil -->
+<div id="touch-ghost"></div>
+
 <div class="root layout-double" id="main-grid">
     <section class="stack" id="col-0">
         <header class="tabs">
-            <div class="tabs-rail" id="rail-0" ondragover="allowDrop(event)" ondragenter="handleDragEnterRail(0)" ondragleave="handleDragLeaveRail(0)" ondrop="handleDropRail(event, 0)"></div>
+            <div class="tabs-rail" id="rail-0"></div>
             <div class="actions">
                 <button class="iconbtn" onclick="toggleFS(0)">⛶</button>
                 <div class="dropdown">
                     <button class="iconbtn" onclick="toggleAddMenu(event, 0)">+</button>
-                    <div class="dropdown-content" id="addMenu-0">
-                        <button onclick="openModal(0)">🌐 URL Personalizada</button>
-                        <button onclick="addPdfTab(0)">📄 Nuevo PDF Viewer</button>
-                        <hr style="border: 0; border-top: 1px solid #333; margin: 4px 0;">
-                        </div>
+                    <div class="dropdown-content" id="addMenu-0"></div>
                 </div>
                 <button class="iconbtn" onclick="resetConfig()">Reset</button>
             </div>
         </header>
-        <div class="panel" id="panel-0"></div>
+        <div class="panel" id="panel-0">
+            <div class="iframe-overlay"></div>
+        </div>
     </section>
 
     <section class="stack" id="col-1">
         <header class="tabs">
-            <div class="tabs-rail" id="rail-1" ondragover="allowDrop(event)" ondragenter="handleDragEnterRail(1)" ondragleave="handleDragLeaveRail(1)" ondrop="handleDropRail(event, 1)"></div>
+            <div class="tabs-rail" id="rail-1"></div>
             <div class="actions">
                 <button class="iconbtn" onclick="toggleFS(1)">⛶</button>
                 <div class="dropdown">
                     <button class="iconbtn" onclick="toggleAddMenu(event, 1)">+</button>
-                    <div class="dropdown-content" id="addMenu-1">
-                        <button onclick="openModal(1)">🌐 URL Personalizada</button>
-                        <button onclick="addPdfTab(1)">📄 Nuevo PDF Viewer</button>
-                        <hr style="border: 0; border-top: 1px solid #333; margin: 4px 0;">
-                        </div>
+                    <div class="dropdown-content" id="addMenu-1"></div>
                 </div>
                 <div class="dropdown">
                     <button class="iconbtn" id="layoutBtn" style="background:var(--primary-color);color:#000;font-weight:bold" onclick="toggleDropdown(event)">Layout ▾</button>
                     <div class="dropdown-content" id="layoutMenu">
                         <button id="opt-double" onclick="changeLayout('double')">Doble Vertical</button>
-						<button id="opt-double-h" onclick="changeLayout('double-h')">Doble Horizontal</button>
+                        <button id="opt-double-h" onclick="changeLayout('double-h')">Doble Horizontal</button>
                         <button id="opt-triple-h" onclick="changeLayout('triple-h')">Triple Horizontal</button>
                         <button id="opt-triple-v" onclick="changeLayout('triple-v')">Triple Vertical</button>
                     </div>
                 </div>
             </div>
         </header>
-        <div class="panel" id="panel-1"></div>
+        <div class="panel" id="panel-1">
+            <div class="iframe-overlay"></div>
+        </div>
     </section>
 
     <section class="stack" id="col-2" style="display: none;">
         <header class="tabs">
-            <div class="tabs-rail" id="rail-2" ondragover="allowDrop(event)" ondragenter="handleDragEnterRail(2)" ondragleave="handleDragLeaveRail(2)" ondrop="handleDropRail(event, 2)"></div>
+            <div class="tabs-rail" id="rail-2"></div>
             <div class="actions">
                 <button class="iconbtn" onclick="toggleFS(2)">⛶</button>
                 <div class="dropdown">
                     <button class="iconbtn" onclick="toggleAddMenu(event, 2)">+</button>
-                    <div class="dropdown-content" id="addMenu-2">
-                        <button onclick="openModal(2)">🌐 URL Personalizada</button>
-                        <button onclick="addPdfTab(2)">📄 Nuevo PDF Viewer</button>
-                        <hr style="border: 0; border-top: 1px solid #333; margin: 4px 0;">
-                    </div>
+                    <div class="dropdown-content" id="addMenu-2"></div>
                 </div>
             </div>
         </header>
-        <div class="panel" id="panel-2"></div>
+        <div class="panel" id="panel-2">
+            <div class="iframe-overlay"></div>
+        </div>
     </section>
 </div>
 
@@ -275,19 +300,35 @@
     };
 
     const DEFAULT_TABS = [
-        { key: 't1', title: 'Player', type: 'URL', column: 0, url: BASE_URLS.Player },
-        { key: 't2', title: 'PDF Viewer', type: 'PDF', column: 0, url: 'about:blank' },
-        { key: 't3', title: 'Notes', type: 'URL', column: 0, url: BASE_URLS.Notes },
-        { key: 't4', title: 'Drive', type: 'URL', column: 0, url: BASE_URLS.Drive },
-        { key: 't5', title: 'Tracker', type: 'URL', column: 1, url: BASE_URLS.Tracker },
-        { key: 't6', title: 'RollForFantasy', type: 'URL', column: 1, url: BASE_URLS.RollForFantasy },
-        { key: 't7', title: 'RabdRoll', type: 'URL', column: 1, url: BASE_URLS.RabdRoll },
-        { key: 't8', title: 'Sound', type: 'URL', column: 1, url: BASE_URLS.Sound }
+        { key: 't1', title: 'Player',         type: 'URL', column: 0, url: BASE_URLS.Player },
+        { key: 't2', title: 'PDF Viewer',      type: 'PDF', column: 0, url: 'about:blank' },
+        { key: 't3', title: 'Notes',           type: 'URL', column: 0, url: BASE_URLS.Notes },
+        { key: 't4', title: 'Drive',           type: 'URL', column: 0, url: BASE_URLS.Drive },
+        { key: 't5', title: 'Tracker',         type: 'URL', column: 1, url: BASE_URLS.Tracker },
+        { key: 't6', title: 'RollForFantasy',  type: 'URL', column: 1, url: BASE_URLS.RollForFantasy },
+        { key: 't7', title: 'RabdRoll',        type: 'URL', column: 1, url: BASE_URLS.RabdRoll },
+        { key: 't8', title: 'Sound',           type: 'URL', column: 1, url: BASE_URLS.Sound }
     ];
 
-    let tabs = JSON.parse(localStorage.getItem('rpg_tabs')) || DEFAULT_TABS;
-    let activeKeys = JSON.parse(localStorage.getItem('rpg_active_keys')) || { 0: 't1', 1: 't3', 2: '' };
+    let tabs       = JSON.parse(localStorage.getItem('rpg_tabs'))        || DEFAULT_TABS;
+    let activeKeys = JSON.parse(localStorage.getItem('rpg_active_keys')) || { 0: 't1', 1: 't5', 2: '' };
     let currentLayout = localStorage.getItem('rpg_layout') || 'double';
+
+    // ─── DRAG STATE (táctil) ───────────────────────────────────────────────────
+    let touchDrag = {
+        active: false,
+        srcKey: null,
+        ghost: null,
+        startX: 0,
+        startY: 0,
+        moved: false,
+        lastOverTab: null,
+        lastOverRail: null,
+        longPressTimer: null
+    };
+    const LONG_PRESS_MS = 300; // ms para iniciar drag táctil
+
+    // ─── LAYOUT ───────────────────────────────────────────────────────────────
 
     function toggleDropdown(e) {
         e.stopPropagation();
@@ -302,33 +343,29 @@
         });
     }
 
-    window.onclick = function() {
-        document.querySelectorAll('.dropdown-content').forEach(menu => {
-            menu.classList.remove('show');
-        });
-    }
+    window.onclick = function () {
+        document.querySelectorAll('.dropdown-content').forEach(m => m.classList.remove('show'));
+    };
 
     function changeLayout(mode) {
         if (mode.startsWith('triple') && tabs.length < 3) {
             alert("Añade al menos 3 pestañas para activar este layout.");
             return;
         }
-
         if (mode.startsWith('triple')) {
-            const panelsContent = [0, 1, 2].map(i => tabs.filter(t => t.column === i).length);
-            if (panelsContent[2] === 0) {
-                const sourceCol = panelsContent[0] > panelsContent[1] ? 0 : 1;
-                const colTabs = tabs.filter(t => t.column === sourceCol);
+            const counts = [0, 1, 2].map(i => tabs.filter(t => t.column === i).length);
+            if (counts[2] === 0) {
+                const src = counts[0] > counts[1] ? 0 : 1;
+                const colTabs = tabs.filter(t => t.column === src);
                 if (colTabs.length > 1) {
-                    const tabToMove = colTabs[colTabs.length - 1];
-                    tabToMove.column = 2;
-                    activeKeys[2] = tabToMove.key;
+                    const moved = colTabs[colTabs.length - 1];
+                    moved.column = 2;
+                    activeKeys[2] = moved.key;
                 }
             }
         } else {
-            tabs.forEach(t => { if(t.column === 2) t.column = 1; });
+            tabs.forEach(t => { if (t.column === 2) t.column = 1; });
         }
-
         currentLayout = mode;
         localStorage.setItem('rpg_layout', mode);
         syncDOM();
@@ -336,77 +373,207 @@
 
     function toggleAddMenu(e, colIdx) {
         e.stopPropagation();
-        
-        // 1. Cerrar todos los demás menús antes de abrir este
         document.querySelectorAll('.dropdown-content').forEach(el => {
             if (el.id !== `addMenu-${colIdx}`) el.classList.remove('show');
         });
-        
         const menu = document.getElementById(`addMenu-${colIdx}`);
-        
-        // 2. Limpiar y Regenerar contenido para asegurar que el colIdx es correcto
-        // Mantenemos las dos opciones fijas primero
         menu.innerHTML = `
             <button onclick="openModal(${colIdx})">🌐 URL Personalizada</button>
             <button onclick="addPdfTab(${colIdx})">📄 Nuevo PDF Viewer</button>
             <hr style="border: 0; border-top: 1px solid #333; margin: 4px 0;">
         `;
-        
-        // 3. Cargar dinámicamente la lista de BASE_URLS
         for (const [name, url] of Object.entries(BASE_URLS)) {
             const btn = document.createElement('button');
             btn.textContent = `📍 ${name}`;
             btn.onclick = () => addPredefinedTab(name, url, colIdx);
             menu.appendChild(btn);
         }
-        
         menu.classList.toggle('show');
     }
 
-    // Función para añadir una pestaña de la lista predefinida
     function addPredefinedTab(name, url, colIdx) {
         const key = 'pre_' + Date.now() + Math.random().toString(36).substr(2, 5);
-        tabs.push({ 
-            key, 
-            title: name, 
-            url, 
-            column: colIdx, 
-            isDynamic: true, 
-            type: 'URL' 
-        });
+        tabs.push({ key, title: name, url, column: colIdx, isDynamic: true, type: 'URL' });
         activeKeys[colIdx] = key;
         syncDOM();
-        // El menú se cerrará por el window.onclick global que ya tienes
     }
 
     function addPdfTab(colIdx) {
-        // Generamos una clave única basada en el tiempo
         const key = 'pdf_' + Date.now();
-        
-        // Insertamos el objeto en el array de pestañas
-        tabs.push({ 
-            key: key, 
-            title: 'PDF Viewer', 
-            url: 'about:blank', // Se inicia vacío hasta que el usuario sube el archivo
-            column: colIdx, 
-            type: 'PDF', 
-            isDynamic: true 
-        });
-        
-        // Hacemos que la nueva pestaña sea la activa en esa columna
+        tabs.push({ key, title: 'PDF Viewer', url: 'about:blank', column: colIdx, type: 'PDF', isDynamic: true });
         activeKeys[colIdx] = key;
-        
-        // Refrescamos el DOM para que aparezca
         syncDOM();
     }
 
-   function syncDOM() {
+    // ─── TOUCH DRAG ───────────────────────────────────────────────────────────
+
+    function startTouchDrag(e, tabKey, tabTitle) {
+        // Solo botón principal (no el botón cerrar)
+        if (e.target.classList.contains('close')) return;
+
+        const touch = e.touches[0];
+        touchDrag.startX = touch.clientX;
+        touchDrag.startY = touch.clientY;
+        touchDrag.srcKey = tabKey;
+        touchDrag.moved = false;
+        touchDrag.active = false;
+
+        // Iniciamos con long-press para no interferir con el tap/scroll
+        touchDrag.longPressTimer = setTimeout(() => {
+            touchDrag.active = true;
+            initGhost(tabTitle, touch.clientX, touch.clientY);
+            document.body.classList.add('dragging-active');
+            // Vibración háptica si disponible
+            if (navigator.vibrate) navigator.vibrate(40);
+        }, LONG_PRESS_MS);
+    }
+
+    function initGhost(title, x, y) {
+        const ghost = document.getElementById('touch-ghost');
+        ghost.textContent = title;
+        ghost.style.left = (x - 20) + 'px';
+        ghost.style.top  = (y - 18) + 'px';
+        ghost.classList.add('visible');
+        touchDrag.ghost = ghost;
+    }
+
+    function moveTouchDrag(e) {
+        const touch = e.touches[0];
+        const dx = touch.clientX - touchDrag.startX;
+        const dy = touch.clientY - touchDrag.startY;
+
+        // Si se mueve antes de long-press, cancelamos el drag (era un scroll)
+        if (!touchDrag.active) {
+            if (Math.abs(dx) > 8 || Math.abs(dy) > 8) {
+                clearTimeout(touchDrag.longPressTimer);
+            }
+            return;
+        }
+
+        e.preventDefault(); // evitar scroll mientras se arrastra
+        touchDrag.moved = true;
+
+        // Mover ghost
+        touchDrag.ghost.style.left = (touch.clientX - 20) + 'px';
+        touchDrag.ghost.style.top  = (touch.clientY - 18) + 'px';
+
+        // Detectar elemento bajo el dedo
+        touchDrag.ghost.style.display = 'none';
+        const el = document.elementFromPoint(touch.clientX, touch.clientY);
+        touchDrag.ghost.style.display = '';
+
+        // Reset highlights previos
+        if (touchDrag.lastOverTab) {
+            touchDrag.lastOverTab.classList.remove('drag-over');
+            touchDrag.lastOverTab = null;
+        }
+        if (touchDrag.lastOverRail) {
+            touchDrag.lastOverRail.classList.remove('drag-target');
+            touchDrag.lastOverRail = null;
+        }
+
+        if (!el) return;
+
+        // ¿Estamos sobre un tab?
+        const tabEl = el.closest('.tab');
+        if (tabEl && tabEl.dataset.key !== touchDrag.srcKey) {
+            tabEl.classList.add('drag-over');
+            touchDrag.lastOverTab = tabEl;
+        }
+
+        // ¿Estamos sobre un rail?
+        const railEl = el.closest('.tabs-rail');
+        if (railEl) {
+            railEl.classList.add('drag-target');
+            touchDrag.lastOverRail = railEl;
+        }
+    }
+
+    function endTouchDrag(e) {
+        clearTimeout(touchDrag.longPressTimer);
+
+        if (touchDrag.lastOverTab)  touchDrag.lastOverTab.classList.remove('drag-over');
+        if (touchDrag.lastOverRail) touchDrag.lastOverRail.classList.remove('drag-target');
+
+        if (!touchDrag.active) {
+            // Fue un tap normal: activar la pestaña
+            // (el onclick del botón lo hace, no hacemos nada extra)
+            resetTouchDrag();
+            return;
+        }
+
+        document.body.classList.remove('dragging-active');
+
+        const ghost = document.getElementById('touch-ghost');
+        ghost.classList.remove('visible');
+
+        if (!touchDrag.moved) {
+            resetTouchDrag();
+            return;
+        }
+
+        // Obtener punto de drop
+        const touch = e.changedTouches[0];
+        ghost.style.display = 'none';
+        const el = document.elementFromPoint(touch.clientX, touch.clientY);
+        ghost.style.display = '';
+
+        if (el) {
+            const tabEl = el.closest('.tab');
+            const railEl = el.closest('.tabs-rail');
+
+            if (tabEl && tabEl.dataset.key && tabEl.dataset.key !== touchDrag.srcKey) {
+                // Drop sobre otro tab: reordenar
+                const targetKey = tabEl.dataset.key;
+                const colIdx = parseInt(tabEl.dataset.col);
+                doDropOnTab(touchDrag.srcKey, targetKey, colIdx);
+            } else if (railEl) {
+                // Drop sobre el rail vacío: mover de columna
+                const colIdx = parseInt(railEl.dataset.col);
+                doDropOnRail(touchDrag.srcKey, colIdx);
+            }
+        }
+
+        resetTouchDrag();
+    }
+
+    function resetTouchDrag() {
+        touchDrag.active  = false;
+        touchDrag.srcKey  = null;
+        touchDrag.moved   = false;
+        touchDrag.lastOverTab  = null;
+        touchDrag.lastOverRail = null;
+    }
+
+    function doDropOnTab(srcKey, targetKey, colIdx) {
+        if (srcKey === targetKey) return;
+        const srcIdx = tabs.findIndex(t => t.key === srcKey);
+        const [moved] = tabs.splice(srcIdx, 1);
+        moved.column = colIdx;
+        const targetIdx = tabs.findIndex(t => t.key === targetKey);
+        tabs.splice(targetIdx, 0, moved);
+        activeKeys[colIdx] = srcKey;
+        syncDOM();
+    }
+
+    function doDropOnRail(srcKey, colIdx) {
+        const tab = tabs.find(t => t.key === srcKey);
+        if (tab) {
+            tab.column = colIdx;
+            activeKeys[colIdx] = srcKey;
+            syncDOM();
+        }
+    }
+
+    // ─── DOM SYNC ─────────────────────────────────────────────────────────────
+
+    function syncDOM() {
         const grid = document.getElementById('main-grid');
         grid.className = `root layout-${currentLayout}`;
         const colLimit = currentLayout.startsWith('triple') ? 3 : 2;
 
         [0, 1, 2].forEach(colIdx => {
-            const rail = document.getElementById(`rail-${colIdx}`);
+            const rail  = document.getElementById(`rail-${colIdx}`);
             const panel = document.getElementById(`panel-${colIdx}`);
             const stack = document.getElementById(`col-${colIdx}`);
             const colTabs = tabs.filter(t => t.column === colIdx);
@@ -420,65 +587,87 @@
             const isActiveValid = colTabs.some(t => t.key === activeKeys[colIdx]);
             if (!isActiveValid && colTabs.length > 0) activeKeys[colIdx] = colTabs[0].key;
 
+            // Datos en el rail para poder detectarlos en touch
+            rail.dataset.col = colIdx;
             rail.innerHTML = '';
+
             colTabs.forEach(tab => {
                 const isActive = activeKeys[colIdx] === tab.key;
                 const btn = document.createElement('button');
                 btn.className = `tab ${isActive ? 'active' : ''} ${tab.isDynamic ? 'dyn' : ''}`;
                 btn.draggable = true;
-                btn.innerHTML = `${tab.title} <span class="close" onclick="closeTab(event, '${tab.key}', ${colIdx})">✕</span>`;
-                
-                // --- BLOQUEO MENÚ CONTEXTUAL ---
-                btn.addEventListener("contextmenu", (e) => {
-                    e.preventDefault(); 
-                }, false);
-                
-                // EVENTOS DE CLICK
-                btn.onclick = () => { activeKeys[colIdx] = tab.key; syncDOM(); };
+                btn.dataset.key = tab.key;
+                btn.dataset.col = colIdx;
+                btn.innerHTML = `${tab.title} <span class="close" data-key="${tab.key}" data-col="${colIdx}">✕</span>`;
 
-                // EVENTOS DE DRAG & DROP
-                btn.ondragstart = (e) => { 
-                    e.dataTransfer.setData('text', tab.key); 
+                btn.addEventListener('contextmenu', e => e.preventDefault());
+
+                // Click normal (tap corto)
+                btn.addEventListener('click', (e) => {
+                    if (e.target.classList.contains('close')) {
+                        closeTab(e, tab.key, colIdx);
+                        return;
+                    }
+                    activeKeys[colIdx] = tab.key;
+                    syncDOM();
+                });
+
+                // ── MOUSE drag (escritorio) ──
+                btn.ondragstart = (e) => {
+                    e.dataTransfer.setData('text', tab.key);
                     setTimeout(() => btn.classList.add('dragging'), 0);
                 };
-                
                 btn.ondragend = () => {
                     btn.classList.remove('dragging');
                     document.querySelectorAll('.tabs-rail').forEach(r => r.classList.remove('drag-target'));
                 };
-
-                btn.ondragover = (e) => { 
-                    e.preventDefault(); 
-                    if (!btn.classList.contains('dragging')) {
-                        btn.classList.add('drag-over'); 
-                    }
-                };
-
+                btn.ondragover  = (e) => { e.preventDefault(); if (!btn.classList.contains('dragging')) btn.classList.add('drag-over'); };
                 btn.ondragleave = () => btn.classList.remove('drag-over');
+                btn.ondrop      = (e) => { btn.classList.remove('drag-over'); handleDropTab(e, tab.key, colIdx); };
 
-                btn.ondrop = (e) => {
-                    btn.classList.remove('drag-over');
-                    handleDropTab(e, tab.key, colIdx);
-                };
+                // ── TOUCH drag (tablet/móvil) ──
+                btn.addEventListener('touchstart', (e) => {
+                    startTouchDrag(e, tab.key, tab.title);
+                }, { passive: true });
+
+                btn.addEventListener('touchmove', (e) => {
+                    moveTouchDrag(e);
+                }, { passive: false }); // false para poder llamar preventDefault
+
+                btn.addEventListener('touchend', (e) => {
+                    endTouchDrag(e);
+                }, { passive: true });
+
+                btn.addEventListener('touchcancel', () => {
+                    clearTimeout(touchDrag.longPressTimer);
+                    document.body.classList.remove('dragging-active');
+                    document.getElementById('touch-ghost').classList.remove('visible');
+                    resetTouchDrag();
+                });
 
                 rail.appendChild(btn);
             });
 
-            // LIMPIEZA DE PANALES ANTIGUOS
+            // Rail: también acepta drop nativo
+            rail.ondragover  = allowDrop;
+            rail.ondragenter = () => handleDragEnterRail(colIdx);
+            rail.ondragleave = () => handleDragLeaveRail(colIdx);
+            rail.ondrop      = (e) => handleDropRail(e, colIdx);
+
+            // Limpieza de paneles huérfanos
             const targetKeys = colTabs.map(t => t.key);
-            panel.querySelectorAll('.tab-pane').forEach(p => { 
-                if (!targetKeys.includes(p.dataset.key)) p.remove(); 
+            panel.querySelectorAll('.tab-pane').forEach(p => {
+                if (!targetKeys.includes(p.dataset.key)) p.remove();
             });
 
-            // RENDERIZADO DE CONTENIDO (URL vs PDF)
+            // Renderizado de contenido
             colTabs.forEach(tab => {
                 let pane = panel.querySelector(`.tab-pane[data-key="${tab.key}"]`);
                 if (!pane) {
                     pane = document.createElement('div');
                     pane.className = 'tab-pane';
                     pane.dataset.key = tab.key;
-                    
-                    // --- CAMBIO AQUÍ: SOPORTE PDF ---
+
                     if (tab.type === 'PDF') {
                         pane.innerHTML = `
                             <div class="pdfWrap">
@@ -491,8 +680,6 @@
                     } else {
                         pane.innerHTML = `<iframe src="${tab.url}"></iframe>`;
                     }
-                    // --------------------------------
-                    
                     panel.appendChild(pane);
                 }
                 pane.classList.toggle('active', activeKeys[colIdx] === tab.key);
@@ -501,8 +688,10 @@
         save();
     }
 
+    // ─── HELPERS ──────────────────────────────────────────────────────────────
+
     function save() {
-        localStorage.setItem('rpg_tabs', JSON.stringify(tabs));
+        localStorage.setItem('rpg_tabs',        JSON.stringify(tabs));
         localStorage.setItem('rpg_active_keys', JSON.stringify(activeKeys));
     }
 
@@ -517,40 +706,25 @@
         syncDOM();
     }
 
-    // FEEDBACK VISUAL PARA EL RAIL
-    function handleDragEnterRail(colIdx) {
-        document.getElementById(`rail-${colIdx}`).classList.add('drag-target');
-    }
-
-    function handleDragLeaveRail(colIdx) {
-        document.getElementById(`rail-${colIdx}`).classList.remove('drag-target');
-    }
+    function handleDragEnterRail(colIdx) { document.getElementById(`rail-${colIdx}`).classList.add('drag-target'); }
+    function handleDragLeaveRail(colIdx) { document.getElementById(`rail-${colIdx}`).classList.remove('drag-target'); }
 
     function handleDropRail(e, colIdx) {
         e.preventDefault();
         handleDragLeaveRail(colIdx);
         const srcKey = e.dataTransfer.getData('text');
-        const tab = tabs.find(t => t.key === srcKey);
-        if (tab) { tab.column = colIdx; activeKeys[colIdx] = srcKey; syncDOM(); }
+        doDropOnRail(srcKey, colIdx);
     }
 
     function handleDropTab(e, targetKey, colIdx) {
         e.preventDefault(); e.stopPropagation();
         const srcKey = e.dataTransfer.getData('text');
-        if (srcKey === targetKey) return;
-        const srcIdx = tabs.findIndex(t => t.key === srcKey);
-        const [moved] = tabs.splice(srcIdx, 1);
-        moved.column = colIdx;
-        const targetIdx = tabs.findIndex(t => t.key === targetKey);
-        tabs.splice(targetIdx, 0, moved);
-        activeKeys[colIdx] = srcKey;
-        syncDOM();
+        doDropOnTab(srcKey, targetKey, colIdx);
     }
 
     function allowDrop(e) { e.preventDefault(); }
 
     function loadPdf(e, key) {
-        console.log(e.target)
         const file = e.target.files[0];
         if (file) {
             const url = URL.createObjectURL(file);
@@ -572,33 +746,31 @@
     }
 
     function resetConfig() {
-        if(confirm("¿Resetear toda la configuración y pestañas?")) { 
-            localStorage.clear(); 
-            location.reload(); 
+        if (confirm("¿Resetear toda la configuración y pestañas?")) {
+            localStorage.clear();
+            location.reload();
         }
     }
 
-    function openModal(col) { 
-        window.currentModalCol = col; 
-        document.getElementById('modal').classList.add('open'); 
+    function openModal(col) {
+        window.currentModalCol = col;
+        document.getElementById('modal').classList.add('open');
         document.getElementById('m-name').focus();
     }
-    
-    function closeModal() { 
-        document.getElementById('modal').classList.remove('open'); 
-    }
+
+    function closeModal() { document.getElementById('modal').classList.remove('open'); }
 
     function saveTab() {
         const name = document.getElementById('m-name').value;
-        const url = document.getElementById('m-url').value;
+        const url  = document.getElementById('m-url').value;
         if (name && url) {
             const key = 'dyn_' + Date.now();
             tabs.push({ key, title: name, url, column: window.currentModalCol, isDynamic: true, type: 'URL' });
             activeKeys[window.currentModalCol] = key;
-            syncDOM(); 
+            syncDOM();
             closeModal();
             document.getElementById('m-name').value = '';
-            document.getElementById('m-url').value = '';
+            document.getElementById('m-url').value  = '';
         }
     }
 
